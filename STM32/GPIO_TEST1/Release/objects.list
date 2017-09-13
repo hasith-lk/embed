@@ -1,0 +1,5 @@
+"startup/startup_stm32.o"
+"src/main.o"
+"src/stm32f10x_it.o"
+"src/system_stm32f10x.o"
+"src/utility.o"

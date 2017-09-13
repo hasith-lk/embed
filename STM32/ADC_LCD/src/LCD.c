@@ -1,0 +1,346 @@
+/*
+ * LCD.c
+ *
+ *  Created on: Aug 18, 2016
+ *      Author: Admin
+ */
+
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
+#include "LCD.h"
+
+void LCD_command(LCD_Struct *LCD, uint8_t value)
+{
+   LCD->send(LCD, value, COMMAND);
+   //send(value, COMMAND);
+}
+
+void LCD_home(LCD_Struct *LCD)
+{
+   LCD_command(LCD, LCD_RETURNHOME);             // set cursor position to zero
+   delayMicroseconds(HOME_CLEAR_EXEC);  // This command is time consuming
+}
+
+void LCD_clear(LCD_Struct *LCD)
+{
+   LCD_command(LCD, LCD_CLEARDISPLAY);             // clear display, set cursor position to zero
+   delayMicroseconds(HOME_CLEAR_EXEC);    // this command is time consuming
+}
+
+void LCD_setCursor(LCD_Struct *LCD, uint8_t col, uint8_t row)
+{
+   const uint8_t row_offsetsDef[]   = { 0x00, 0x40, 0x14, 0x54 }; // For regular LCDs
+   const uint8_t row_offsetsLarge[] = { 0x00, 0x40, 0x10, 0x50 }; // For 16x4 LCDs
+
+   if ( row >= LCD->_numlines )
+   {
+      row = LCD->_numlines-1;    // rows start at 0
+   }
+
+   // 16x4 LCDs have special memory map layout
+   // ----------------------------------------
+   if ( LCD->_cols == 16 && LCD->_numlines == 4 )
+   {
+      LCD_command(LCD, LCD_SETDDRAMADDR | (col + row_offsetsLarge[row]));
+   }
+   else
+   {
+      LCD_command(LCD, LCD_SETDDRAMADDR | (col + row_offsetsDef[row]));
+   }
+
+}
+
+// Turn the display on/off
+void LCD_noDisplay(LCD_Struct *LCD)
+{
+   LCD->_displaycontrol &= ~LCD_DISPLAYON;
+   LCD_command(LCD, LCD_DISPLAYCONTROL | LCD->_displaycontrol);
+}
+
+void LCD_display(LCD_Struct *LCD)
+{
+   LCD->_displaycontrol |= LCD_DISPLAYON;
+   LCD_command(LCD, LCD_DISPLAYCONTROL | LCD->_displaycontrol);
+}
+
+// Turns the underline cursor on/off
+void LCD_noCursor(LCD_Struct *LCD)
+{
+   LCD->_displaycontrol &= ~LCD_CURSORON;
+   LCD_command(LCD, LCD_DISPLAYCONTROL | LCD->_displaycontrol);
+}
+void LCD_cursor(LCD_Struct *LCD)
+{
+   LCD->_displaycontrol |= LCD_CURSORON;
+   LCD_command(LCD, LCD_DISPLAYCONTROL | LCD->_displaycontrol);
+}
+
+// Turns on/off the blinking cursor
+void LCD_noBlink(LCD_Struct *LCD)
+{
+   LCD->_displaycontrol &= ~LCD_BLINKON;
+   LCD_command(LCD, LCD_DISPLAYCONTROL | LCD->_displaycontrol);
+}
+
+void LCD_blink(LCD_Struct *LCD)
+{
+   LCD->_displaycontrol |= LCD_BLINKON;
+   LCD_command(LCD, LCD_DISPLAYCONTROL | LCD->_displaycontrol);
+}
+
+// These commands scroll the display without changing the RAM
+void LCD_scrollDisplayLeft(LCD_Struct *LCD)
+{
+   LCD_command(LCD, LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT);
+}
+
+void LCD_scrollDisplayRight(LCD_Struct *LCD)
+{
+   LCD_command(LCD, LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT);
+}
+
+// This is for text that flows Left to Right
+void LCD_leftToRight(LCD_Struct *LCD)
+{
+   LCD->_displaymode |= LCD_ENTRYLEFT;
+   LCD_command(LCD, LCD_ENTRYMODESET | LCD->_displaymode);
+}
+
+// This is for text that flows Right to Left
+void LCD_rightToLeft(LCD_Struct *LCD)
+{
+   LCD->_displaymode &= ~LCD_ENTRYLEFT;
+   LCD_command(LCD, LCD_ENTRYMODESET | LCD->_displaymode);
+}
+
+// This method moves the cursor one space to the right
+void LCD_moveCursorRight(LCD_Struct *LCD)
+{
+   LCD_command(LCD, LCD_CURSORSHIFT | LCD_CURSORMOVE | LCD_MOVERIGHT);
+}
+
+// This method moves the cursor one space to the left
+void LCD_moveCursorLeft(LCD_Struct *LCD)
+{
+   LCD_command(LCD, LCD_CURSORSHIFT | LCD_CURSORMOVE | LCD_MOVELEFT);
+}
+
+
+// This will 'right justify' text from the cursor
+void LCD_autoscroll(LCD_Struct *LCD)
+{
+   LCD->_displaymode |= LCD_ENTRYSHIFTINCREMENT;
+   LCD_command(LCD, LCD_ENTRYMODESET | LCD->_displaymode);
+}
+
+// This will 'left justify' text from the cursor
+void LCD_noAutoscroll(LCD_Struct *LCD)
+{
+   LCD->_displaymode &= ~LCD_ENTRYSHIFTINCREMENT;
+   LCD_command(LCD, LCD_ENTRYMODESET | LCD->_displaymode);
+}
+
+// Write to CGRAM of new characters
+void LCD_createChar(LCD_Struct *LCD, uint8_t location, uint8_t charmap[])
+{
+   location &= 0x7;            // we only have 8 locations 0-7
+
+   LCD_command(LCD, LCD_SETCGRAMADDR | (location << 3));
+   delayMicroseconds(30);
+
+   uint8_t i = 0;
+   for (; i < 8; i++)
+   {
+      LCD->write(LCD, charmap[i]);      // call the virtual write method
+      delayMicroseconds(40);
+   }
+}
+
+void LCD_write(LCD_Struct *LCD, uint8_t value)
+{
+   LCD->send(LCD, value, DATA);
+}
+
+size_t LCD_printStr(LCD_Struct *LCD, const char *str)
+{
+   size_t length = strlen(str);
+   size_t count = 0;
+   while(length--)
+   {
+      LCD_print(LCD, *str++);
+      count++;
+   }
+   return count;
+}
+
+size_t LCD_print(LCD_Struct *LCD, const char c)
+{
+   LCD_write(LCD, (uint8_t)c);
+   return 1;
+}
+
+/*void LCD_display()
+{
+   LCD->_displaycontrol |= LCD_DISPLAYON;
+   LCD_command(LCD_DISPLAYCONTROL | LCD->_displaycontrol);
+}*/
+
+void LCD_backlight (LCD_Struct *LCD)
+{
+   LCD->setBacklight(LCD, 120);
+}
+
+//
+// Switch off the backlight
+void LCD_noBacklight (LCD_Struct *LCD)
+{
+   LCD->setBacklight(LCD, 0);
+}
+
+//
+// Switch fully on the LCD (backlight and LCD)
+void LCD_on (LCD_Struct *LCD)
+{
+   LCD_display(LCD);
+   LCD_backlight(LCD);
+}
+
+//
+// Switch fully off the LCD (backlight and LCD)
+void LCD_off (LCD_Struct *LCD)
+{
+   LCD_noBacklight(LCD);
+   LCD_noDisplay(LCD);
+}
+
+// PUBLIC METHODS
+// ---------------------------------------------------------------------------
+// When the display powers up, it is configured as follows:
+// 0. LCD starts in 8 bit mode
+// 1. Display clear
+// 2. Function set:
+//    DL = 1; 8-bit interface data
+//    N = 0; 1-line display
+//    F = 0; 5x8 dot character font
+// 3. Display on/off control:
+//    D = 0; Display off
+//    C = 0; Cursor off
+//    B = 0; Blinking off
+// 4. Entry mode set:
+//    I/D = 1; Increment by 1
+//    S = 0; No shift
+//
+// Note, however, that resetting the Arduino doesn't reset the LCD, so we
+// can't assume that its in that state when a application starts (and the
+// LiquidCrystal constructor is called).
+// A call to begin() will reinitialize the LCD.
+void LCD_begin(LCD_Struct *LCD, uint8_t cols, uint8_t lines, uint8_t dotsize)
+{
+   if (lines > 1)
+   {
+      LCD->_displayfunction |= LCD_2LINE;
+   }
+   LCD->_numlines = lines;
+   LCD->_cols = cols;
+
+   // for some 1 line displays you can select a 10 pixel high font
+   // ------------------------------------------------------------
+   if ((dotsize != LCD_5x8DOTS) && (lines == 1))
+   {
+      LCD->_displayfunction |= LCD_5x10DOTS;
+   }
+
+   // SEE PAGE 45/46 FOR INITIALIZATION SPECIFICATION!
+   // according to datasheet, we need at least 40ms after power rises above 2.7V
+   // before sending commands. Arduino can turn on way before 4.5V so we'll wait
+   // 50
+   // ---------------------------------------------------------------------------
+   delay (100); // 100ms delay
+   //put the LCD into 4 bit or 8 bit mode
+   // -------------------------------------
+   if (! (LCD->_displayfunction & LCD_8BITMODE))
+   {
+      // this is according to the hitachi HD44780 datasheet
+      // figure 24, pg 46
+
+      // we start in 8bit mode, try to set 4 bit mode
+      // Special case of "Function Set"
+      LCD->send(LCD, 0x03, FOUR_BITS);
+      delayMicroseconds(4500); // wait min 4.1ms
+
+      // second try
+      LCD->send (LCD, 0x03, FOUR_BITS );
+      delayMicroseconds(150); // wait min 100us
+
+      // third go!
+      LCD->send(LCD, 0x03, FOUR_BITS );
+      delayMicroseconds(150); // wait min of 100us
+
+      // finally, set to 4-bit interface
+      LCD->send (LCD, 0x02, FOUR_BITS );
+      delayMicroseconds(150); // wait min of 100us
+
+   }
+   else
+   {
+      // this is according to the hitachi HD44780 datasheet
+      // page 45 figure 23
+
+      // Send function set command sequence
+      LCD_command(LCD, LCD_FUNCTIONSET | LCD->_displayfunction);
+      delayMicroseconds(4500);  // wait more than 4.1ms
+
+      // second try
+      LCD_command(LCD, LCD_FUNCTIONSET | LCD->_displayfunction);
+      delayMicroseconds(150);
+
+      // third go
+      LCD_command(LCD, LCD_FUNCTIONSET | LCD->_displayfunction);
+      delayMicroseconds(150);
+
+   }
+
+   // finally, set # lines, font size, etc.
+   LCD_command(LCD, LCD_FUNCTIONSET | LCD->_displayfunction);
+   delayMicroseconds ( 60 );  // wait more
+
+   // turn the display on with no cursor or blinking default
+   LCD->_displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
+   LCD_display(LCD);
+
+   // Initialize to default text direction (for romance languages)
+   LCD->_displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
+   // set the entry mode
+   LCD_command(LCD, LCD_ENTRYMODESET | LCD->_displaymode);
+   LCD_backlight(LCD);
+
+   // clear the LCD
+   LCD_clear(LCD);
+}
+
+void LCD_begin58(LCD_Struct *LCD, uint8_t cols, uint8_t lines)
+{
+   LCD_begin(LCD, cols, lines, LCD_5x8DOTS);
+}
+
+LCD_Struct *new_LCD_Struct(void)
+{
+   LCD_Struct *LCD = malloc(sizeof(LCD_Struct));
+   // Set Functions
+   LCD->write = &LCD_write;
+   LCD->begin = &LCD_begin;
+   return LCD;
+}
+
+void base_LCD_Struct(LCD_Struct * LCD)
+{
+   // Set Functions
+   LCD->write = &LCD_write;
+   LCD->begin = &LCD_begin;
+}
+
+#ifdef __cplusplus
+}
+#endif
