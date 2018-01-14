@@ -1,4 +1,5 @@
 # Embedded Coding repo
+Embedded coding using STM32 F103 Microprocessor
 
 This repo contains the embedded codes written for STM32 MCPU and for Arduino boards.
 Some simple stuff that will be used to perform IO operations using microcontroller unit.
