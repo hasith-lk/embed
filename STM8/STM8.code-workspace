@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"name": "STM_SPL_SPLITTED",
+			"path": "STM_SPL_SPLITTED"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"stm8s_conf.h": "c",
+			"stm8s_clk.h": "c",
+			"stm8s.h": "c"
+		}
+	}
+}

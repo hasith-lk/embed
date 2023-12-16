@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "stm8s103_serial.h": "c",
+        "stm8s_it.h": "c",
+        "stm8s.h": "c",
+        "stdint.h": "c",
+        "stm8s_conf.h": "c"
+    }
+}

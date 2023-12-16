@@ -1,0 +1,51 @@
+{
+  "name": "STM8S-SDCC-SPL",
+  "version": "1.0.0",
+  "description": "SPL Split",
+  "keywords": "planet, happiness, people",
+  "license": "MIT",
+  "homepage": "https://www.helloworld.org/",
+  "build": {
+    "flags": [
+        "-I inc",
+        "-I conf"
+    ],
+    "srcFilter": [
+      "-<*.c>",
+      "+<stm8s_clk_DeInit.c>",
+      "+<stm8s_clk_HSECmd.c>",
+      "+<stm8s_clk_HSICmd.c>",
+      "+<stm8s_clk_LSICmd.c>",
+      "+<stm8s_clk_GetFlagStatus.c>",
+      "+<stm8s_clk_ClockSwitchCmd.c>",
+      "+<stm8s_clk_HSIPrescalerConfig.c>",
+      "+<stm8s_clk_SYSCLKConfig.c>",
+      "+<stm8s_clk_ClockSwitchConfig.c>",
+      "+<stm8s_clk_PeripheralClockConfig.c>",
+      "+<stm8s_tim1_*.c>",
+      "+<stm8s_tim2_DeInit.c>",
+      "+<stm8s_tim2_TimeBaseInit.c>",
+      "+<stm8s_tim2_Cmd.c>",
+      "+<stm8s_tim2_GetCounter.c>",
+      "+<stm8s_tim2_OC1Init.c>",
+      "+<stm8s_tim2_SetCompare1.c>",
+      "+<stm8s_tim2_ClearITPendingBit.c>",
+      "+<stm8s_tim2_ITConfig.c>",
+      "+<stm8s_uart1_DeInit.c>",
+      "+<stm8s_uart1_Init.c>",
+      "+<stm8s_uart1_Cmd.c>",
+      "+<stm8s_uart1_GetFlagStatus.c>",
+      "+<stm8s_uart1_ReceiveData8.c>",
+      "+<stm8s_uart1_SendData8.c>",
+      "+<stm8s_uart1_ClearFlag.c>",
+      "+<stm8s_gpio_Init.c>",
+      "+<stm8s_gpio_DeInit.c>",
+      "+<stm8s_gpio_WriteHigh.c>",
+      "+<stm8s_gpio_WriteReverse.c>",
+      "+<stm8s_gpio_WriteLow.c>",
+      "+<stm8s_clk_GetClockFreq.c>",
+      "+<stm8s_clk_private.c>",
+      "+<*.h>"
+  ]
+}
+}
