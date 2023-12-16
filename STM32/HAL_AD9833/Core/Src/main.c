@@ -445,10 +445,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 // Callback: timer has rolled over
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	// Check which version of the timer triggered this callback and toggle LED
-	if (htim == &htim2) {
+	/*if (htim == &htim2) {
 		HAL_GPIO_TogglePin(PIN_BOARD_LED_GPIO_Port, PIN_BOARD_LED_Pin);
 	}
-	HAL_ADC_Start_IT(&hadc1);
+	HAL_ADC_Start_IT(&hadc1);*/
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
